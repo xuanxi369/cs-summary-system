@@ -486,7 +486,7 @@ async function startAnalysis() {
   updateProgress(0, total, '正在准备分析...');
 
   // 并发控制：最多 3 个并发
-  const concurrency = 3;
+  const concurrency = 7;
   const queue = [...parsedDialogues];
   const workers = [];
 
