@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>对话智能分析 · CS Analytica</title>
+  <title>对话智能 analysis · CS Analytica</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -286,11 +286,9 @@
 </head>
 <body class="min-h-screen text-ink-900">
 
-  <!-- ===== Header ===== -->
   <header class="sticky top-0 z-50 bg-surface-50/80 backdrop-blur-xl border-b border-surface-200">
     <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <!-- Logo mark -->
         <div class="w-9 h-9 rounded-xl bg-ink-900 flex items-center justify-center">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
@@ -317,13 +315,10 @@
     <div class="accent-line"></div>
   </header>
 
-  <!-- ===== Main ===== -->
   <main class="max-w-6xl mx-auto px-6 py-8">
 
-    <!-- ---- Input Section ---- -->
     <section id="section-input" class="mb-10">
       <div class="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5">
-        <!-- Textarea -->
         <div>
           <label for="input-json" class="text-label text-ink-500 mb-2 block">粘贴对话 JSON 数组</label>
           <textarea
@@ -337,9 +332,7 @@
             <span class="text-caption text-ink-300">Ctrl + Enter 快速分析</span>
           </div>
         </div>
-        <!-- Sidebar controls -->
         <div class="flex flex-col gap-4">
-          <!-- API Key -->
           <div>
             <label for="input-apikey" class="text-label text-ink-500 mb-2 block">DeepSeek API Key</label>
             <input
@@ -349,17 +342,16 @@
               placeholder="sk-...（可选，优先级低于 Worker 环境变量）"
             />
           </div>
-          <!-- Worker URL -->
           <div>
             <label for="input-worker-url" class="text-label text-ink-500 mb-2 block">Worker 地址</label>
             <input
               id="input-worker-url"
               type="text"
+              value="https://cs-summary-system.millychck-033.workers.dev"
               class="w-full rounded-xl border border-surface-200 bg-white px-4 py-3 text-body text-ink-900 placeholder:text-ink-300 transition-colors font-mono text-sm"
               placeholder="https://xxx.workers.dev"
             />
           </div>
-          <!-- Action button -->
           <button id="btn-analyze" class="btn btn-primary mt-auto" onclick="startAnalysis()" disabled>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             <span>开始批量分析</span>
@@ -368,12 +360,10 @@
       </div>
     </section>
 
-    <!-- ---- Progress Section ---- -->
     <section id="section-progress" class="mb-10 hidden">
       <div class="bg-white rounded-2xl border border-surface-200 shadow-card px-6 py-5">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-3">
-            <!-- Spinner -->
             <div class="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
             <span id="progress-text" class="text-subhead">分析中...</span>
           </div>
@@ -386,14 +376,10 @@
       </div>
     </section>
 
-    <!-- ---- Dashboard Section ---- -->
     <section id="section-dashboard" class="hidden">
-      <!-- Summary stats -->
       <div id="stats-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 stagger-children">
-        <!-- Stats cards injected by JS -->
-      </div>
+        </div>
 
-      <!-- Results list -->
       <div class="flex items-center justify-between mb-5">
         <h2 class="text-heading">分析结果</h2>
         <div class="flex items-center gap-2">
@@ -409,15 +395,12 @@
       </div>
 
       <div id="results-list" class="flex flex-col gap-4 stagger-children">
-        <!-- Result cards injected by JS -->
-      </div>
+        </div>
     </section>
   </main>
 
-  <!-- ===== Toast Container ===== -->
   <div id="toast-container" class="toast-container"></div>
 
-  <!-- ===== Footer ===== -->
   <footer class="max-w-6xl mx-auto px-6 py-8 mt-8 border-t border-surface-200">
     <div class="flex items-center justify-between text-caption text-ink-400">
       <span>CS Analytica · 客服对话智能分析系统</span>
@@ -671,9 +654,7 @@ function resultCard(r, index) {
 
   return `
     <div class="result-card bg-white rounded-2xl border border-surface-200 shadow-card overflow-hidden">
-      <!-- Header row -->
       <div class="px-6 py-5 cursor-pointer flex items-start gap-5" onclick="toggleDetail(${index})">
-        <!-- Score ring -->
         <div class="flex-shrink-0 hidden sm:block">
           <svg width="64" height="64" viewBox="0 0 64 64">
             <circle class="score-ring-track" cx="32" cy="32" r="28" stroke-width="4"/>
@@ -688,7 +669,6 @@ function resultCard(r, index) {
             </text>
           </svg>
         </div>
-        <!-- Content -->
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-3 mb-2 flex-wrap">
             <span class="font-mono text-label text-ink-400">#${r.id}</span>
@@ -710,17 +690,14 @@ function resultCard(r, index) {
             </span>
           </div>
         </div>
-        <!-- Expand arrow -->
         <div class="flex-shrink-0 mt-2 transition-transform duration-300" id="arrow-${index}">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 12 15 18 9"/>
           </svg>
         </div>
       </div>
-      <!-- Detail panel -->
       <div class="detail-panel" id="detail-${index}">
         <div class="px-6 pb-6 pt-2 border-t border-surface-100">
-          <!-- AI Evaluation -->
           <div class="mb-5">
             <h4 class="text-label text-ink-500 mb-3">AI 质量评估</h4>
             <div class="bg-surface-50 rounded-xl p-4">
@@ -732,7 +709,6 @@ function resultCard(r, index) {
               <p class="text-body text-ink-700">${escapeHtml(r.reasoning)}</p>
             </div>
           </div>
-          <!-- Conversation transcript -->
           ${dialogue.turns ? `
           <div>
             <h4 class="text-label text-ink-500 mb-3">对话原文</h4>
