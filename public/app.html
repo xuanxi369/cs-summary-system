@@ -4,13 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>对话智能 analysis · CS Analytica</title>
+  
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
- 
-  <!-- <link href="https://fonts.geekzu.org/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://lf26-cdn-tos.bytecdntp.com/cdn/expire-1-M/tailwindcss/3.0.23/cdn.min.js"></script> -->
   
   <script>
     tailwind.config = {
@@ -486,7 +484,7 @@ async function startAnalysis() {
 
   updateProgress(0, total, '正在准备分析...');
 
-  // 并发控制：最多 3 个并发
+  // 并发控制：7个并发
   const concurrency = 7;
   const queue = [...parsedDialogues];
   const workers = [];
