@@ -1,0 +1,15 @@
+name = "cs-summary-worker"
+main = "src/worker.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# ============================================================
+# 环境变量说明
+# ============================================================
+# DEEPSEEK_API_KEY — 通过 wrangler secret put 设置，勿写入此文件
+#   命令: wrangler secret put DEEPSEEK_API_KEY
+#
+# CORS_ORIGIN — 允许的前端域名（部署 Pages 后替换）
+#   示例: https://cs-summary.pages.dev
+[vars]
+CORS_ORIGIN = "*"

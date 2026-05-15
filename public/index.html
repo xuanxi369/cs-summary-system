@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CS Analytica · 客服对话智能分析系统</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans SC', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            brand: { 50: '#EEF2FF', 100: '#E0E7FF', 400: '#818CF8', 500: '#6366F1', 600: '#4F46E5', 700: '#4338CA' },
+            ink: { 900: '#0F1219', 700: '#374151', 500: '#6B7280', 400: '#9CA3AF' },
+            surface: { 50: '#FAFBFE', 200: '#E8ECF4' },
+            rose: { 50: '#FFF1F2', 400: '#FB7185', 500: '#F43F5E' },
+            emerald: { 50: '#ECFDF5', 400: '#34D399', 500: '#10B981' },
+            amber: { 50: '#FFFBEB', 500: '#F59E0B' },
+          },
+          fontSize: {
+            'hero': ['4rem', { lineHeight: '1.08', fontWeight: '900', letterSpacing: '-0.03em' }],
+            'hero-sub': ['1.25rem', { lineHeight: '1.7', fontWeight: '400' }],
+          },
+          keyframes: {
+            'float-a': {
+              '0%, 100%': { transform: 'translateY(0) rotate(-1.5deg)' },
+              '50%': { transform: 'translateY(-14px) rotate(1.5deg)' },
+            },
+            'float-b': {
+              '0%, 100%': { transform: 'translateY(0) rotate(1deg)' },
+              '50%': { transform: 'translateY(-18px) rotate(-1deg)' },
+            },
+            'float-c': {
+              '0%, 100%': { transform: 'translateY(0) rotate(0.5deg)' },
+              '50%': { transform: 'translateY(-10px) rotate(-2deg)' },
+            },
+            'fade-up': {
+              '0%': { opacity: '0', transform: 'translateY(24px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            'fade-in': {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            'slide-right': {
+              '0%': { opacity: '0', transform: 'translateX(-20px)' },
+              '100%': { opacity: '1', transform: 'translateX(0)' },
+            },
+            'pulse-ring': {
+              '0%': { transform: 'scale(1)', opacity: '0.6' },
+              '100%': { transform: 'scale(1.8)', opacity: '0' },
+            },
+            'count-up': {
+              '0%': { opacity: '0', transform: 'translateY(8px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+          },
+          animation: {
+            'float-a': 'float-a 6s ease-in-out infinite',
+            'float-b': 'float-b 7s ease-in-out infinite 0.5s',
+            'float-c': 'float-c 5.5s ease-in-out infinite 1s',
+            'fade-up': 'fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'fade-up-delay-1': 'fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards',
+            'fade-up-delay-2': 'fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards',
+            'fade-up-delay-3': 'fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards',
+            'fade-in': 'fade-in 0.8s ease forwards',
+            'slide-right': 'slide-right 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'count-up': 'count-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+    body { background: #FAFBFE; overflow-x: hidden; }
+
+    /* === Dot grid pattern === */
+    .dot-grid {
+      background-image: radial-gradient(circle, #D1D5DB 0.8px, transparent 0.8px);
+      background-size: 24px 24px;
+    }
+
+    /* === Floating chat cards === */
+    .float-card {
+      position: absolute;
+      background: rgba(255,255,255,0.92);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(229,231,235,0.8);
+      border-radius: 16px;
+      padding: 14px 18px;
+      box-shadow: 0 4px 20px rgba(15,18,25,0.06), 0 1px 3px rgba(15,18,25,0.03);
+      font-size: 0.8125rem;
+      max-width: 260px;
+      line-height: 1.5;
+    }
+    .float-card .fc-role {
+      display: inline-block;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 6px;
+      margin-bottom: 4px;
+    }
+    .fc-user { background: #EEF2FF; color: #4F46E5; }
+    .fc-agent { background: #ECFDF5; color: #059669; }
+    .fc-score {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 700;
+      font-size: 0.75rem;
+      margin-top: 6px;
+      padding: 3px 10px;
+      border-radius: 8px;
+      background: #FFFBEB;
+      color: #D97706;
+    }
+
+    /* === CTA button glow === */
+    .cta-glow {
+      position: relative;
+      overflow: visible;
+    }
+    .cta-glow::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #6366F1, #F43F5E, #10B981);
+      opacity: 0;
+      z-index: -1;
+      transition: opacity 0.3s;
+      filter: blur(12px);
+    }
+    .cta-glow:hover::after { opacity: 0.4; }
+
+    /* === Feature card === */
+    .feature-card {
+      background: #fff;
+      border: 1px solid #E8ECF4;
+      border-radius: 20px;
+      padding: 32px 28px;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(15,18,25,0.08);
+      border-color: transparent;
+    }
+
+    /* === Step connector === */
+    .step-line {
+      position: absolute;
+      top: 28px;
+      left: calc(50% + 28px);
+      width: calc(100% - 56px);
+      height: 2px;
+      background: linear-gradient(90deg, #6366F1, #E8ECF4);
+    }
+
+    /* === Scroll reveal === */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* === Tricolor line === */
+    .accent-line {
+      height: 3px;
+      background: linear-gradient(90deg, #6366F1 0%, #F43F5E 50%, #10B981 100%);
+      border-radius: 2px;
+    }
+
+    /* === Navbar blur === */
+    .nav-blur {
+      background: rgba(250,251,254,0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    /* === Score badge floating === */
+    .score-float {
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.125rem;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    }
+
+    /* === Responsive hero === */
+    @media (max-width: 768px) {
+      .float-card { display: none; }
+      .hero-title { font-size: 2.5rem !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== Navigation ===== -->
+  <nav class="nav-blur fixed top-0 inset-x-0 z-50 border-b border-surface-200/50">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-ink-900 flex items-center justify-center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <span class="font-bold text-base tracking-tight">CS Analytica</span>
+      </div>
+      <div class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-500">
+        <a href="#features" class="hover:text-gray-900 transition-colors">功能</a>
+        <a href="#how-it-works" class="hover:text-gray-900 transition-colors">流程</a>
+        <a href="#stats" class="hover:text-gray-900 transition-colors">数据</a>
+      </div>
+      <a href="app.html" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-ink-900 text-white text-sm font-semibold hover:bg-gray-800 transition-all">
+        进入系统
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      </a>
+    </div>
+  </nav>
+
+  <!-- ===== Hero ===== -->
+  <section class="relative min-h-screen flex items-center pt-16 overflow-hidden">
+    <!-- Dot grid background -->
+    <div class="absolute inset-0 dot-grid opacity-40"></div>
+    
+    <!-- Floating conversation cards (desktop) -->
+    <div class="absolute inset-0 hidden lg:block" aria-hidden="true">
+      <!-- Card 1: refund query -->
+      <div class="float-card animate-float-a" style="top: 18%; right: 8%; animation-delay: 0s;">
+        <span class="fc-role fc-user">用户</span>
+        <p class="text-gray-700">我申请退款都7天了还没到账</p>
+        <span class="fc-role fc-agent">客服</span>
+        <p class="text-gray-700">退款已审核通过，银行处理中...</p>
+        <div class="fc-score">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26"/></svg>
+          4.2 质量评分
+        </div>
+      </div>
+
+      <!-- Card 2: wrong item -->
+      <div class="float-card animate-float-b" style="top: 52%; right: 2%; animation-delay: 0.5s;">
+        <span class="fc-role fc-user">用户</span>
+        <p class="text-gray-700">我买的是黑色M码，收到白色L码</p>
+        <span class="fc-role fc-agent">客服</span>
+        <p class="text-gray-700">抱歉发错了，立即安排重发...</p>
+        <div class="fc-score">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          已解决 · 4.8 分
+        </div>
+      </div>
+
+      <!-- Card 3: activity inquiry -->
+      <div class="float-card animate-float-c" style="top: 28%; right: 30%; animation-delay: 1s;">
+        <span class="fc-role fc-user">用户</span>
+        <p class="text-gray-700">双11有什么活动？满减可以叠加吗？</p>
+        <span class="fc-role fc-agent">客服</span>
+        <p class="text-gray-700">可以叠加，跨店满300减50...</p>
+        <div class="fc-score">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          咨询 · 4.5 分
+        </div>
+      </div>
+
+      <!-- Floating score badges -->
+      <div class="score-float bg-emerald-50 text-emerald-500 animate-float-b" style="top: 70%; right: 25%; animation-delay: 1.5s;">4.8</div>
+      <div class="score-float bg-brand-50 text-brand-500 animate-float-c" style="top: 12%; right: 38%; animation-delay: 2s;">4.5</div>
+      <div class="score-float bg-amber-50 text-amber-500 animate-float-a" style="top: 75%; right: 10%; animation-delay: 0.8s;">3.2</div>
+    </div>
+
+    <!-- Hero content -->
+    <div class="relative max-w-6xl mx-auto px-6 w-full">
+      <div class="max-w-2xl">
+        <!-- Badge -->
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-50 border border-brand-100 mb-6 opacity-0 animate-fade-up">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span class="text-xs font-semibold text-brand-600 tracking-wide uppercase">Powered by DeepSeek AI</span>
+        </div>
+
+        <!-- Title -->
+        <h1 class="hero-title text-hero text-ink-900 mb-6 opacity-0 animate-fade-up-delay-1">
+          客服对话<br>
+          <span class="bg-gradient-to-r from-brand-500 via-rose-400 to-emerald-400 bg-clip-text text-transparent">智能分析系统</span>
+        </h1>
+
+        <!-- Subtitle -->
+        <p class="text-hero-sub text-gray-500 mb-10 max-w-lg opacity-0 animate-fade-up-delay-2">
+          粘贴对话 JSON，一键生成结构化摘要与质量评分。<br>
+          让数百条对话的审阅工作，缩短到几分钟。
+        </p>
+
+        <!-- CTA buttons -->
+        <div class="flex items-center gap-4 flex-wrap opacity-0 animate-fade-up-delay-3">
+          <a href="app.html" class="cta-glow inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-brand-500 text-white text-lg font-bold hover:bg-brand-600 transition-all shadow-lg shadow-brand-500/25">
+            进入分析系统
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+          <a href="#features" class="inline-flex items-center gap-2 px-6 py-4 rounded-2xl bg-white border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-300 transition-all">
+            了解更多
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-0 animate-fade-in" style="animation-delay: 1.2s;">
+      <span class="text-xs text-gray-400 font-medium">向下滚动</span>
+      <div class="w-5 h-8 rounded-full border-2 border-gray-300 flex justify-center pt-1.5">
+        <div class="w-1 h-2 rounded-full bg-gray-400 animate-bounce"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Accent line divider ===== -->
+  <div class="max-w-6xl mx-auto px-6">
+    <div class="accent-line w-full"></div>
+  </div>
+
+  <!-- ===== Features ===== -->
+  <section id="features" class="py-24">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16 reveal">
+        <span class="text-sm font-semibold text-brand-500 tracking-wider uppercase">核心能力</span>
+        <h2 class="text-3xl md:text-4xl font-extrabold text-ink-900 mt-3 tracking-tight">三大功能，一站式解决</h2>
+        <p class="text-gray-500 mt-4 max-w-md mx-auto">从对话输入到质量报告，全流程自动化</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- Feature 1 -->
+        <div class="feature-card reveal">
+          <div class="w-12 h-12 rounded-2xl bg-brand-50 flex items-center justify-center mb-5">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold text-ink-900 mb-2">数据输入</h3>
+          <p class="text-gray-500 text-sm leading-relaxed">直接粘贴客服对话 JSON 数组，支持批量导入。内置示例数据一键体验，零配置即用。</p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="feature-card reveal">
+          <div class="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center mb-5">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F43F5E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold text-ink-900 mb-2">AI 批量分析</h3>
+          <p class="text-gray-500 text-sm leading-relaxed">DeepSeek 驱动的智能引擎，并发处理对话，自动生成摘要、诉求提取与质量评分。</p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="feature-card reveal">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center mb-5">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+          </div>
+          <h3 class="text-lg font-bold text-ink-900 mb-2">质量仪表盘</h3>
+          <p class="text-gray-500 text-sm leading-relaxed">可视化评分环形图、状态标签、统计卡片。支持展开对话详情，一键导出 CSV 报告。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== How it works ===== -->
+  <section id="how-it-works" class="py-24 bg-white border-y border-surface-200">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="text-center mb-16 reveal">
+        <span class="text-sm font-semibold text-emerald-500 tracking-wider uppercase">使用流程</span>
+        <h2 class="text-3xl md:text-4xl font-extrabold text-ink-900 mt-3 tracking-tight">三步完成分析</h2>
+        <p class="text-gray-500 mt-4 max-w-md mx-auto">从粘贴数据到获得报告，整个过程不超过一分钟</p>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-12 relative">
+        <!-- Connector line (desktop) -->
+        <div class="hidden md:block absolute top-7 left-[calc(16.67%+28px)] right-[calc(16.67%+28px)] h-0.5 bg-gradient-to-r from-brand-200 via-rose-200 to-emerald-200"></div>
+
+        <!-- Step 1 -->
+        <div class="text-center relative reveal">
+          <div class="w-14 h-14 rounded-2xl bg-brand-500 text-white text-xl font-bold mx-auto mb-5 flex items-center justify-center shadow-lg shadow-brand-500/30 relative z-10">1</div>
+          <h3 class="text-lg font-bold text-ink-900 mb-2">粘贴对话数据</h3>
+          <p class="text-gray-500 text-sm leading-relaxed max-w-xs mx-auto">将客服对话 JSON 数组粘贴到输入框，系统自动识别验证</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="text-center relative reveal">
+          <div class="w-14 h-14 rounded-2xl bg-rose-500 text-white text-xl font-bold mx-auto mb-5 flex items-center justify-center shadow-lg shadow-rose-500/30 relative z-10">2</div>
+          <h3 class="text-lg font-bold text-ink-900 mb-2">AI 智能分析</h3>
+          <p class="text-gray-500 text-sm leading-relaxed max-w-xs mx-auto">点击分析按钮，DeepSeek 引擎并发处理每段对话</p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="text-center relative reveal">
+          <div class="w-14 h-14 rounded-2xl bg-emerald-500 text-white text-xl font-bold mx-auto mb-5 flex items-center justify-center shadow-lg shadow-emerald-500/30 relative z-10">3</div>
+          <h3 class="text-lg font-bold text-ink-900 mb-2">查看评估报告</h3>
+          <p class="text-gray-500 text-sm leading-relaxed max-w-xs mx-auto">可视化仪表盘呈现摘要、评分与详情，支持导出 CSV</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Stats ===== -->
+  <section id="stats" class="py-24">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="grid md:grid-cols-4 gap-6 reveal">
+        <div class="text-center py-6">
+          <div class="text-4xl font-extrabold text-brand-500 mb-1" data-count="10">10</div>
+          <div class="text-sm text-gray-500 font-medium">内置对话样本</div>
+        </div>
+        <div class="text-center py-6">
+          <div class="text-4xl font-extrabold text-rose-500 mb-1">5</div>
+          <div class="text-sm text-gray-500 font-medium">质量评分等级</div>
+        </div>
+        <div class="text-center py-6">
+          <div class="text-4xl font-extrabold text-emerald-500 mb-1">3</div>
+          <div class="text-sm text-gray-500 font-medium">并发处理通道</div>
+        </div>
+        <div class="text-center py-6">
+          <div class="text-4xl font-extrabold text-amber-500 mb-1">&lt;1</div>
+          <div class="text-sm text-gray-500 font-medium">秒 / 每段分析</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="py-24">
+    <div class="max-w-6xl mx-auto px-6">
+      <div class="relative bg-ink-900 rounded-3xl px-8 py-16 md:px-16 md:py-20 text-center overflow-hidden reveal">
+        <!-- Decorative circles -->
+        <div class="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-brand-500/10 blur-3xl"></div>
+        <div class="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-emerald-500/10 blur-3xl"></div>
+        
+        <div class="relative z-10">
+          <h2 class="text-3xl md:text-4xl font-extrabold text-white mb-4 tracking-tight">准备好提升客服效率了吗？</h2>
+          <p class="text-gray-400 text-lg mb-8 max-w-md mx-auto">告别逐条审阅，让 AI 为你完成 80% 的分析工作</p>
+          <a href="app.html" class="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-white text-ink-900 text-lg font-bold hover:bg-gray-100 transition-all shadow-xl">
+            立即开始
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Footer ===== -->
+  <footer class="border-t border-surface-200 py-8">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 rounded-md bg-ink-900 flex items-center justify-center">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <span class="text-sm font-semibold text-gray-700">CS Analytica</span>
+      </div>
+      <p class="text-xs text-gray-400">Powered by DeepSeek AI · Built on Cloudflare</p>
+    </div>
+  </footer>
+
+  <script>
+    // === Scroll reveal (Intersection Observer) ===
+    const revealEls = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+    revealEls.forEach(el => observer.observe(el));
+
+    // === Smooth scroll for anchor links ===
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  </script>
+</body>
+</html>

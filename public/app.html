@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>对话智能分析 · CS Analytica</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans SC', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['SF Mono', 'Fira Code', 'Consolas', 'monospace'],
+          },
+          colors: {
+            surface: { 50: '#FAFBFE', 100: '#F4F6FB', 200: '#E8ECF4' },
+            ink: { 900: '#0F1219', 700: '#374151', 500: '#6B7280', 400: '#9CA3AF', 300: '#D1D5DB' },
+            blue: { 50: '#EEF2FF', 100: '#E0E7FF', 400: '#818CF8', 500: '#6366F1', 600: '#4F46E5' },
+            rose: { 50: '#FFF1F2', 100: '#FFE4E6', 400: '#FB7185', 500: '#F43F5E' },
+            emerald: { 50: '#ECFDF5', 100: '#D1FAE5', 400: '#34D399', 500: '#10B981' },
+            amber: { 50: '#FFFBEB', 100: '#FEF3C7', 400: '#FBBF24', 500: '#F59E0B' },
+          },
+          fontSize: {
+            'display': ['2.5rem', { lineHeight: '1.15', fontWeight: '800' }],
+            'heading': ['1.5rem', { lineHeight: '1.3', fontWeight: '700' }],
+            'subhead': ['1.125rem', { lineHeight: '1.5', fontWeight: '600' }],
+            'body': ['1.0625rem', { lineHeight: '1.65' }],
+            'label': ['0.8125rem', { lineHeight: '1.4', fontWeight: '500' }],
+            'caption': ['0.75rem', { lineHeight: '1.4' }],
+          },
+          boxShadow: {
+            'card': '0 1px 3px rgba(15,18,25,0.04), 0 1px 2px rgba(15,18,25,0.02)',
+            'card-hover': '0 8px 25px rgba(15,18,25,0.08), 0 2px 6px rgba(15,18,25,0.04)',
+            'elevated': '0 12px 40px rgba(15,18,25,0.12)',
+          },
+          borderRadius: {
+            'xl': '0.875rem',
+            '2xl': '1rem',
+            '3xl': '1.25rem',
+          },
+          keyframes: {
+            'fade-up': {
+              '0%': { opacity: '0', transform: 'translateY(16px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            'slide-in': {
+              '0%': { opacity: '0', transform: 'translateX(20px)' },
+              '100%': { opacity: '1', transform: 'translateX(0)' },
+            },
+            'scale-in': {
+              '0%': { opacity: '0', transform: 'scale(0.95)' },
+              '100%': { opacity: '1', transform: 'scale(1)' },
+            },
+            'toast-in': {
+              '0%': { opacity: '0', transform: 'translateY(12px) scale(0.96)' },
+              '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+            },
+            'ring-fill': {
+              '0%': { strokeDashoffset: '175.93' },
+            },
+            'shimmer': {
+              '0%': { backgroundPosition: '-200% 0' },
+              '100%': { backgroundPosition: '200% 0' },
+            },
+          },
+          animation: {
+            'fade-up': 'fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'slide-in': 'slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'scale-in': 'scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'toast-in': 'toast-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'ring-fill': 'ring-fill 1s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'shimmer': 'shimmer 2s infinite linear',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    /* === Base === */
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body { background: #FAFBFE; font-family: 'Inter', 'Noto Sans SC', system-ui, sans-serif; }
+
+    /* === Scrollbar === */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
+
+    /* === Focus ring === */
+    :focus-visible {
+      outline: 2px solid #6366F1;
+      outline-offset: 2px;
+      border-radius: 8px;
+    }
+
+    /* === Textarea === */
+    .input-area {
+      resize: vertical;
+      min-height: 220px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-area:focus {
+      border-color: #6366F1;
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+      outline: none;
+    }
+
+    /* === Score ring === */
+    .score-ring-track { fill: none; stroke: #E8ECF4; }
+    .score-ring-fill {
+      fill: none;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1);
+      transform: rotate(-90deg);
+      transform-origin: center;
+    }
+
+    /* === Progress bar === */
+    .progress-bar {
+      height: 6px;
+      border-radius: 3px;
+      background: #E8ECF4;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      background: linear-gradient(90deg, #6366F1, #818CF8);
+      transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* === Status chips === */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      line-height: 1.3;
+      white-space: nowrap;
+    }
+    .chip-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .chip-resolved { background: #ECFDF5; color: #059669; }
+    .chip-resolved .chip-dot { background: #10B981; }
+    .chip-processing { background: #FFF1F2; color: #E11D48; }
+    .chip-processing .chip-dot { background: #F43F5E; }
+    .chip-pending { background: #FFFBEB; color: #D97706; }
+    .chip-pending .chip-dot { background: #F59E0B; }
+
+    /* === Card expand === */
+    .result-card { transition: box-shadow 0.25s, transform 0.25s; }
+    .result-card:hover { box-shadow: 0 8px 25px rgba(15,18,25,0.08), 0 2px 6px rgba(15,18,25,0.04); }
+    .detail-panel {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+      opacity: 0;
+    }
+    .detail-panel.open {
+      max-height: 800px;
+      opacity: 1;
+    }
+
+    /* === Toast === */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      padding: 14px 20px;
+      border-radius: 12px;
+      background: #0F1219;
+      color: #fff;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      box-shadow: 0 12px 40px rgba(15,18,25,0.2);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: toast-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .toast-success .toast-icon { color: #34D399; }
+    .toast-error .toast-icon { color: #FB7185; }
+    .toast-info .toast-icon { color: #818CF8; }
+
+    /* === Button base === */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: inherit;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      white-space: nowrap;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-primary {
+      background: #6366F1;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: #4F46E5;
+      box-shadow: 0 4px 16px rgba(99,102,241,0.4);
+      transform: translateY(-1px);
+    }
+    .btn-secondary {
+      background: #fff;
+      color: #374151;
+      border: 1.5px solid #E8ECF4;
+    }
+    .btn-secondary:hover:not(:disabled) {
+      background: #F4F6FB;
+      border-color: #D1D5DB;
+    }
+    .btn-ghost {
+      background: transparent;
+      color: #6B7280;
+      padding: 10px 16px;
+    }
+    .btn-ghost:hover { background: #F4F6FB; color: #374151; }
+
+    /* === Tricolor accent line === */
+    .accent-line {
+      height: 3px;
+      background: linear-gradient(90deg, #6366F1 0%, #F43F5E 50%, #10B981 100%);
+      border-radius: 2px;
+    }
+
+    /* === Stagger children === */
+    .stagger-children > * {
+      opacity: 0;
+      animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+    .stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+    .stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+    .stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+    .stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+    .stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+    .stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
+    .stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+    .stagger-children > *:nth-child(9) { animation-delay: 0.45s; }
+    .stagger-children > *:nth-child(10) { animation-delay: 0.5s; }
+
+    /* === Shimmer loading === */
+    .shimmer-bg {
+      background: linear-gradient(90deg, #F4F6FB 25%, #E8ECF4 50%, #F4F6FB 75%);
+      background-size: 200% 100%;
+      animation: shimmer 2s infinite linear;
+    }
+
+    /* === Conversation transcript === */
+    .turn-user {
+      background: #F4F6FB;
+      border-left: 3px solid #6366F1;
+    }
+    .turn-agent {
+      background: #fff;
+      border-left: 3px solid #10B981;
+    }
+  </style>
+</head>
+<body class="min-h-screen text-ink-900">
+
+  <!-- ===== Header ===== -->
+  <header class="sticky top-0 z-50 bg-surface-50/80 backdrop-blur-xl border-b border-surface-200">
+    <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <!-- Logo mark -->
+        <div class="w-9 h-9 rounded-xl bg-ink-900 flex items-center justify-center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold tracking-tight leading-none">CS Analytica</h1>
+          <p class="text-caption text-ink-400 mt-0.5">对话智能分析 · 质量评估</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="index.html" class="btn-ghost text-label">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          首页
+        </a>
+        <span class="w-px h-4 bg-ink-300"></span>
+        <span id="header-status" class="text-caption text-ink-400 hidden">就绪</span>
+        <button id="btn-load-sample" class="btn-ghost text-label" onclick="loadSampleData()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          加载示例数据
+        </button>
+      </div>
+    </div>
+    <div class="accent-line"></div>
+  </header>
+
+  <!-- ===== Main ===== -->
+  <main class="max-w-6xl mx-auto px-6 py-8">
+
+    <!-- ---- Input Section ---- -->
+    <section id="section-input" class="mb-10">
+      <div class="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5">
+        <!-- Textarea -->
+        <div>
+          <label for="input-json" class="text-label text-ink-500 mb-2 block">粘贴对话 JSON 数组</label>
+          <textarea
+            id="input-json"
+            class="input-area w-full rounded-2xl border border-surface-200 bg-white px-5 py-4 text-body text-ink-900 font-mono leading-relaxed placeholder:text-ink-300"
+            placeholder='[{"id":"001","turns":[{"role":"user","content":"..."},{"role":"assistant","content":"..."}]}]'
+            spellcheck="false"
+          ></textarea>
+          <div class="flex items-center justify-between mt-2.5">
+            <span id="input-count" class="text-caption text-ink-400">未检测到有效对话</span>
+            <span class="text-caption text-ink-300">Ctrl + Enter 快速分析</span>
+          </div>
+        </div>
+        <!-- Sidebar controls -->
+        <div class="flex flex-col gap-4">
+          <!-- API Key -->
+          <div>
+            <label for="input-apikey" class="text-label text-ink-500 mb-2 block">DeepSeek API Key</label>
+            <input
+              id="input-apikey"
+              type="password"
+              class="w-full rounded-xl border border-surface-200 bg-white px-4 py-3 text-body text-ink-900 placeholder:text-ink-300 transition-colors"
+              placeholder="sk-...（可选，优先级低于 Worker 环境变量）"
+            />
+          </div>
+          <!-- Worker URL -->
+          <div>
+            <label for="input-worker-url" class="text-label text-ink-500 mb-2 block">Worker 地址</label>
+            <input
+              id="input-worker-url"
+              type="text"
+              class="w-full rounded-xl border border-surface-200 bg-white px-4 py-3 text-body text-ink-900 placeholder:text-ink-300 transition-colors font-mono text-sm"
+              placeholder="https://xxx.workers.dev"
+            />
+          </div>
+          <!-- Action button -->
+          <button id="btn-analyze" class="btn btn-primary mt-auto" onclick="startAnalysis()" disabled>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span>开始批量分析</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---- Progress Section ---- -->
+    <section id="section-progress" class="mb-10 hidden">
+      <div class="bg-white rounded-2xl border border-surface-200 shadow-card px-6 py-5">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-3">
+            <!-- Spinner -->
+            <div class="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+            <span id="progress-text" class="text-subhead">分析中...</span>
+          </div>
+          <span id="progress-count" class="text-label text-ink-500">0 / 0</span>
+        </div>
+        <div class="progress-bar">
+          <div id="progress-fill" class="progress-bar-fill" style="width: 0%"></div>
+        </div>
+        <p id="progress-detail" class="text-caption text-ink-400 mt-2">正在准备...</p>
+      </div>
+    </section>
+
+    <!-- ---- Dashboard Section ---- -->
+    <section id="section-dashboard" class="hidden">
+      <!-- Summary stats -->
+      <div id="stats-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 stagger-children">
+        <!-- Stats cards injected by JS -->
+      </div>
+
+      <!-- Results list -->
+      <div class="flex items-center justify-between mb-5">
+        <h2 class="text-heading">分析结果</h2>
+        <div class="flex items-center gap-2">
+          <button class="btn-ghost text-label" onclick="exportCSV()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            导出 CSV
+          </button>
+          <button class="btn-ghost text-label" onclick="resetAll()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            重新分析
+          </button>
+        </div>
+      </div>
+
+      <div id="results-list" class="flex flex-col gap-4 stagger-children">
+        <!-- Result cards injected by JS -->
+      </div>
+    </section>
+  </main>
+
+  <!-- ===== Toast Container ===== -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- ===== Footer ===== -->
+  <footer class="max-w-6xl mx-auto px-6 py-8 mt-8 border-t border-surface-200">
+    <div class="flex items-center justify-between text-caption text-ink-400">
+      <span>CS Analytica · 客服对话智能分析系统</span>
+      <span>Powered by DeepSeek AI</span>
+    </div>
+  </footer>
+
+<script>
+// ============================================================
+//  CS Analytica — 核心逻辑
+// ============================================================
+
+// ---------- State ----------
+let parsedDialogues = [];
+let results = [];
+let isProcessing = false;
+
+// ---------- DOM refs ----------
+const $inputJson = document.getElementById('input-json');
+const $inputApiKey = document.getElementById('input-apikey');
+const $inputWorkerUrl = document.getElementById('input-worker-url');
+const $btnAnalyze = document.getElementById('btn-analyze');
+const $inputCount = document.getElementById('input-count');
+const $sectionInput = document.getElementById('section-input');
+const $sectionProgress = document.getElementById('section-progress');
+const $sectionDashboard = document.getElementById('section-dashboard');
+const $progressText = document.getElementById('progress-text');
+const $progressCount = document.getElementById('progress-count');
+const $progressFill = document.getElementById('progress-fill');
+const $progressDetail = document.getElementById('progress-detail');
+const $statsGrid = document.getElementById('stats-grid');
+const $resultsList = document.getElementById('results-list');
+
+// ---------- Init ----------
+$inputJson.addEventListener('input', debounce(validateInput, 300));
+$inputJson.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    if (!$btnAnalyze.disabled) startAnalysis();
+  }
+});
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+function debounce(fn, ms) {
+  let timer;
+  return (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), ms); };
+}
+
+function validateInput() {
+  const raw = $inputJson.value.trim();
+  if (!raw) {
+    parsedDialogues = [];
+    $inputCount.textContent = '未检测到有效对话';
+    $btnAnalyze.disabled = true;
+    return;
+  }
+  try {
+    const data = JSON.parse(raw);
+    const arr = Array.isArray(data) ? data : [data];
+    const valid = arr.filter(d => d && Array.isArray(d.turns) && d.turns.length > 0);
+    parsedDialogues = valid;
+    $inputCount.textContent = `检测到 ${valid.length} 段对话`;
+    $inputCount.className = valid.length > 0 ? 'text-caption text-emerald-500' : 'text-caption text-rose-500';
+    $btnAnalyze.disabled = valid.length === 0;
+  } catch {
+    parsedDialogues = [];
+    $inputCount.textContent = 'JSON 格式错误，请检查';
+    $inputCount.className = 'text-caption text-rose-500';
+    $btnAnalyze.disabled = true;
+  }
+}
+
+// ---------- Sample Data ----------
+function loadSampleData() {
+  const sample = [
+    {"id":"001","turns":[{"role":"user","content":"我申请退款都7天了还没到账"},{"role":"assistant","content":"退款已于3天前审核通过正在银行处理中，不同银行到账时间不同一般3-7个工作日。再过2天还没到可以联系银行查询或再联系我们。"},{"role":"user","content":"好的再等等吧"},{"role":"assistant","content":"好的，有问题随时联系我们。"}],"reference_summary":"用户咨询退款到账时间，客服告知已审核通过正在银行处理中，建议再等2天。问题暂未最终解决。"},
+    {"id":"002","turns":[{"role":"user","content":"我买的是黑色M码的卫衣，收到白色L码的"},{"role":"assistant","content":"抱歉发错了，是仓库失误。现在帮您安排重发黑色M码，同时快递上门取回错发商品，运费全部我们承担。"},{"role":"user","content":"什么时候来取？"},{"role":"assistant","content":"快递员明天上午联系您取件，新商品今天发出预计后天到。"}],"reference_summary":"用户收到错发商品，客服确认仓库失误并安排重发和上门取回，运费商家承担。问题已解决。"},
+    {"id":"003","turns":[{"role":"user","content":"双11有什么活动？"},{"role":"assistant","content":"分两波：10月31日-11月3日和11月10-11日。跨店满300减50、定金预售翻倍、限量半价抢购。"},{"role":"user","content":"满减可以叠加店铺券吗？"},{"role":"assistant","content":"可以叠加。比如350元商品用300-50满减再用50元店铺券，最终250元。"}],"reference_summary":"用户咨询双11活动，客服介绍时间和优惠并确认满减可与店铺券叠加。纯咨询已解答。"},
+    {"id":"004","turns":[{"role":"user","content":"快递到本地3天了不派送"},{"role":"assistant","content":"帮您催派了，通常24小时内会派送。明天还没更新可以申请退款或等我们跟进。"},{"role":"user","content":"先催一下吧"},{"role":"assistant","content":"已提交催件，有更新第一时间通知您。"}],"reference_summary":"用户快递到本地3天未派送，客服已催件并承诺跟进。问题待解决。"},
+    {"id":"005","turns":[{"role":"user","content":"扫地机器人老是走一半就停，显示E03"},{"role":"assistant","content":"E03是边刷缠绕异物。请检查两侧边刷是否有头发缠绕，清理后重启试试。"},{"role":"user","content":"确实缠了好多头发，清理了好了谢谢"},{"role":"assistant","content":"建议每周清理一次边刷延长寿命。"}],"reference_summary":"用户扫地机器人报E03错误，客服指导清理边刷后恢复正常。问题已解决。"},
+    {"id":"006","turns":[{"role":"user","content":"5天前买的鞋499今天降到399了能补差价吗？"},{"role":"assistant","content":"在15天价保期内，已帮您申请退差价100元，1-2个工作日到账。"},{"role":"user","content":"这么快？谢谢！"},{"role":"assistant","content":"价保自动审核很快。保价期内再降价还可以继续申请。"}],"reference_summary":"用户申请价保退差价100元，客服确认在保价期内已处理。问题已解决。"},
+    {"id":"007","turns":[{"role":"user","content":"退货了但商家拒绝说有使用痕迹，我就试穿了一次"},{"role":"assistant","content":"如果吊牌完好无明显穿着痕迹是可以退的。请问吊牌还在吗？鞋底有磨损吗？"},{"role":"user","content":"吊牌在，就室内走了几步"},{"role":"assistant","content":"建议申请平台介入，上传鞋底和吊牌照片作证据，48小时内判定，大概率支持退款。"}],"reference_summary":"用户退货被商家拒绝，客服建议申请平台介入并提供证据。问题处理中等待判定。"},
+    {"id":"008","turns":[{"role":"user","content":"付款一直失败显示系统繁忙"},{"role":"assistant","content":"可能是网络或银行卡限额问题。建议换个支付方式试试，或等10分钟重试。"},{"role":"user","content":"换支付宝就行了，应该是银行卡问题"},{"role":"assistant","content":"可能是银行卡单日限额，可以联系银行调高网上支付限额。"}],"reference_summary":"用户付款失败，客服建议换支付方式后成功。原因为银行卡限额，问题已解决。"},
+    {"id":"009","turns":[{"role":"user","content":"买了挂式空调包安装吗？"},{"role":"assistant","content":"包含免费基础安装（支架+3米以内管道）。加长管道或高空作业另收费。师傅会在发货后联系您预约。"},{"role":"user","content":"我6楼没电梯，搬上来也免费吗？"},{"role":"assistant","content":"高楼层无电梯搬运另收费每层约20-30元，师傅上门前会跟您确认。也可以自行搬上楼后让师傅安装。"}],"reference_summary":"用户咨询空调安装，客服告知基础安装免费但高楼层搬运需加费。纯咨询已解答。"},
+    {"id":"010","turns":[{"role":"user","content":"怎么突然从金卡变银卡了？"},{"role":"assistant","content":"会员等级每季度根据近12个月消费重新评估。您近12个月消费4200元未达金卡5000元标准，自动调为银卡。"},{"role":"user","content":"之前的金卡权益还有吗？"},{"role":"assistant","content":"等级调整后权益相应变更。银卡仍享有每月3次免运费和生日礼包。您离金卡只差800元，近期购物可升回。"}],"reference_summary":"用户会员降级，客服解释因消费未达标并告知当前权益及升级差额。已解答。"}
+  ];
+  $inputJson.value = JSON.stringify(sample, null, 2);
+  validateInput();
+  showToast('已加载 10 段示例对话数据', 'info');
+}
+
+// ---------- Analysis ----------
+async function startAnalysis() {
+  if (isProcessing || parsedDialogues.length === 0) return;
+  isProcessing = true;
+  results = [];
+
+  // UI → progress
+  $sectionProgress.classList.remove('hidden');
+  $sectionDashboard.classList.add('hidden');
+  $progressFill.style.width = '0%';
+  $btnAnalyze.disabled = true;
+
+  const total = parsedDialogues.length;
+  let completed = 0;
+  let failed = 0;
+
+  updateProgress(0, total, '正在准备分析...');
+
+  // 并发控制：最多 3 个并发
+  const concurrency = 3;
+  const queue = [...parsedDialogues];
+  const workers = [];
+
+  for (let i = 0; i < concurrency; i++) {
+    workers.push(runWorker());
+  }
+
+  async function runWorker() {
+    while (queue.length > 0) {
+      const dialogue = queue.shift();
+      if (!dialogue) break;
+
+      updateProgress(completed, total, `正在分析对话 #${dialogue.id || completed + 1}...`);
+
+      try {
+        const result = await analyzeDialogue(dialogue);
+        results.push(result);
+        completed++;
+      } catch (err) {
+        results.push({
+          id: dialogue.id || '?',
+          summary: `分析失败: ${err.message}`,
+          score: 0,
+          score_label: '失败',
+          reasoning: err.message,
+          status: '待解决',
+          user_intent: '-',
+          agent_action: '-',
+          error: true,
+        });
+        completed++;
+        failed++;
+      }
+
+      updateProgress(completed, total, `已完成 ${completed}/${total}${failed > 0 ? `（${failed} 失败）` : ''}`);
+    }
+  }
+
+  // 等待所有 worker 完成
+  await Promise.all(workers);
+
+  isProcessing = false;
+  updateProgress(total, total, '分析完成');
+  $progressText.textContent = '分析完成 ✓';
+  $progressDetail.textContent = failed > 0
+    ? `成功 ${total - failed} 段，失败 ${failed} 段`
+    : `全部 ${total} 段对话分析完成`;
+
+  showToast(
+    failed > 0
+      ? `分析完成：成功 ${total - failed} 段，失败 ${failed} 段`
+      : `全部 ${total} 段对话分析完成 ✓`,
+    failed > 0 ? 'error' : 'success'
+  );
+
+  setTimeout(() => renderDashboard(), 600);
+}
+
+async function analyzeDialogue(dialogue) {
+  const workerUrl = $inputWorkerUrl.value.trim();
+  const apiKey = $inputApiKey.value.trim();
+
+  if (!workerUrl) throw new Error('请填写 Worker 地址');
+
+  const resp = await fetch(`${workerUrl}/api/summarize`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ dialogue, api_key: apiKey || undefined }),
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+    throw new Error(err.error || `请求失败 (${resp.status})`);
+  }
+
+  return await resp.json();
+}
+
+function updateProgress(done, total, detail) {
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  $progressFill.style.width = `${pct}%`;
+  $progressCount.textContent = `${done} / ${total}`;
+  if (detail) $progressDetail.textContent = detail;
+}
+
+// ---------- Render Dashboard ----------
+function renderDashboard() {
+  $sectionProgress.classList.add('hidden');
+  $sectionDashboard.classList.remove('hidden');
+
+  // Stats
+  const total = results.length;
+  const resolved = results.filter(r => r.status === '已解决').length;
+  const processing = results.filter(r => r.status === '处理中').length;
+  const avgScore = total > 0
+    ? (results.filter(r => !r.error).reduce((s, r) => s + r.score, 0) / results.filter(r => !r.error).length).toFixed(1)
+    : '—';
+
+  $statsGrid.innerHTML = [
+    statCard('总对话', total, '对话总数', '#6366F1', 'bg-blue-50'),
+    statCard('已解决', resolved, `占比 ${total > 0 ? Math.round(resolved/total*100) : 0}%`, '#10B981', 'bg-emerald-50'),
+    statCard('处理中', processing, `占比 ${total > 0 ? Math.round(processing/total*100) : 0}%`, '#F43F5E', 'bg-rose-50'),
+    statCard('平均评分', avgScore, '满分 5.0', '#F59E0B', 'bg-amber-50'),
+  ].join('');
+
+  // Results
+  $resultsList.innerHTML = results.map((r, i) => resultCard(r, i)).join('');
+
+  // Animate score rings
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.score-ring-fill').forEach(el => {
+      const target = el.getAttribute('data-target');
+      el.style.strokeDashoffset = target;
+    });
+  });
+}
+
+function statCard(label, value, sub, color, bgColor) {
+  return `
+    <div class="bg-white rounded-2xl border border-surface-200 shadow-card px-5 py-5">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="w-2 h-2 rounded-full" style="background:${color}"></div>
+        <span class="text-label text-ink-500">${label}</span>
+      </div>
+      <div class="text-display" style="color:${color}">${value}</div>
+      <div class="text-caption text-ink-400 mt-1">${sub}</div>
+    </div>`;
+}
+
+function resultCard(r, index) {
+  const statusClass = r.status === '已解决' ? 'resolved' : r.status === '处理中' ? 'processing' : 'pending';
+  const scoreColor = r.error ? '#9CA3AF' : r.score >= 4 ? '#10B981' : r.score >= 3 ? '#F59E0B' : '#F43F5E';
+  const circumference = 2 * Math.PI * 28; // r=28
+  const offset = r.error ? circumference : circumference * (1 - r.score / 5);
+  const dialogue = parsedDialogues.find(d => d.id === r.id) || {};
+
+  return `
+    <div class="result-card bg-white rounded-2xl border border-surface-200 shadow-card overflow-hidden">
+      <!-- Header row -->
+      <div class="px-6 py-5 cursor-pointer flex items-start gap-5" onclick="toggleDetail(${index})">
+        <!-- Score ring -->
+        <div class="flex-shrink-0 hidden sm:block">
+          <svg width="64" height="64" viewBox="0 0 64 64">
+            <circle class="score-ring-track" cx="32" cy="32" r="28" stroke-width="4"/>
+            <circle class="score-ring-fill" cx="32" cy="32" r="28" stroke-width="4"
+              stroke="${scoreColor}"
+              stroke-dasharray="${circumference}"
+              stroke-dashoffset="${circumference}"
+              data-target="${offset}"/>
+            <text x="32" y="37" text-anchor="middle" font-size="18" font-weight="700"
+              fill="${r.error ? '#9CA3AF' : '#0F1219'}" font-family="Inter, sans-serif">
+              ${r.error ? '—' : r.score}
+            </text>
+          </svg>
+        </div>
+        <!-- Content -->
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-3 mb-2 flex-wrap">
+            <span class="font-mono text-label text-ink-400">#${r.id}</span>
+            <span class="chip chip-${statusClass}">
+              <span class="chip-dot"></span>
+              ${r.status}
+            </span>
+            <span class="sm:hidden text-subhead" style="color:${scoreColor}">
+              ${r.error ? '—' : r.score + '分'}
+            </span>
+          </div>
+          <p class="text-body text-ink-700 leading-relaxed">${escapeHtml(r.summary)}</p>
+          <div class="flex items-center gap-4 mt-3 flex-wrap">
+            <span class="text-caption text-ink-400">
+              <span class="font-medium text-ink-500">诉求</span> ${escapeHtml(r.user_intent) || '-'}
+            </span>
+            <span class="text-caption text-ink-400">
+              <span class="font-medium text-ink-500">措施</span> ${escapeHtml(r.agent_action) || '-'}
+            </span>
+          </div>
+        </div>
+        <!-- Expand arrow -->
+        <div class="flex-shrink-0 mt-2 transition-transform duration-300" id="arrow-${index}">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </div>
+      </div>
+      <!-- Detail panel -->
+      <div class="detail-panel" id="detail-${index}">
+        <div class="px-6 pb-6 pt-2 border-t border-surface-100">
+          <!-- AI Evaluation -->
+          <div class="mb-5">
+            <h4 class="text-label text-ink-500 mb-3">AI 质量评估</h4>
+            <div class="bg-surface-50 rounded-xl p-4">
+              <div class="flex items-center gap-3 mb-2">
+                <span class="text-subhead" style="color:${scoreColor}">${escapeHtml(r.score_label)}</span>
+                <span class="text-caption text-ink-400">·</span>
+                <span class="text-label" style="color:${scoreColor}">${r.score}/5 分</span>
+              </div>
+              <p class="text-body text-ink-700">${escapeHtml(r.reasoning)}</p>
+            </div>
+          </div>
+          <!-- Conversation transcript -->
+          ${dialogue.turns ? `
+          <div>
+            <h4 class="text-label text-ink-500 mb-3">对话原文</h4>
+            <div class="space-y-2 max-h-64 overflow-y-auto pr-2">
+              ${dialogue.turns.map(t => `
+                <div class="${t.role === 'user' ? 'turn-user' : 'turn-agent'} rounded-xl px-4 py-3">
+                  <span class="text-caption font-medium ${t.role === 'user' ? 'text-blue-500' : 'text-emerald-500'}">
+                    ${t.role === 'user' ? '用户' : '客服'}
+                  </span>
+                  <p class="text-body text-ink-700 mt-1">${escapeHtml(t.content)}</p>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+          ` : ''}
+          ${dialogue.reference_summary ? `
+          <div class="mt-4 p-3 bg-surface-50 rounded-xl">
+            <span class="text-caption font-medium text-ink-400">参考摘要</span>
+            <p class="text-body text-ink-500 mt-1">${escapeHtml(dialogue.reference_summary)}</p>
+          </div>
+          ` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+function toggleDetail(index) {
+  const panel = document.getElementById(`detail-${index}`);
+  const arrow = document.getElementById(`arrow-${index}`);
+  const isOpen = panel.classList.contains('open');
+  panel.classList.toggle('open');
+  arrow.style.transform = isOpen ? '' : 'rotate(180deg)';
+}
+
+// ---------- Export CSV ----------
+function exportCSV() {
+  if (results.length === 0) return;
+  const header = 'ID,摘要,状态,评分,评分标签,评分理由,用户诉求,客服措施';
+  const rows = results.map(r =>
+    [r.id, `"${(r.summary||'').replace(/"/g,'""')}"`, r.status, r.score, r.score_label,
+     `"${(r.reasoning||'').replace(/"/g,'""')}"`, `"${(r.user_intent||'').replace(/"/g,'""')}"`,
+     `"${(r.agent_action||'').replace(/"/g,'""')}"`].join(',')
+  );
+  const csv = '\uFEFF' + header + '\n' + rows.join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `cs-analysis-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV 报告已导出', 'success');
+}
+
+// ---------- Reset ----------
+function resetAll() {
+  results = [];
+  // 保留输入数据，只重置结果
+  $sectionDashboard.classList.add('hidden');
+  $sectionProgress.classList.add('hidden');
+  validateInput(); // 重新验证已有输入，恢复按钮状态
+  $sectionInput.scrollIntoView({ behavior: 'smooth' });
+  showToast('已重置结果，可重新分析', 'info');
+}
+
+// ---------- Toast ----------
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const icons = {
+    success: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>',
+    error: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',
+    info: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+  };
+
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `<span class="toast-icon">${icons[type]}</span>${message}`;
+  container.appendChild(el);
+
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(8px)';
+    el.style.transition = 'all 0.3s ease';
+    setTimeout(() => el.remove(), 300);
+  }, 3500);
+}
+</script>
+</body>
+</html>
