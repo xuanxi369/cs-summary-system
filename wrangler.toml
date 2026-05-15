@@ -8,6 +8,7 @@ compatibility_flags = ["nodejs_compat"]
 # ============================================================
 # 环境变量说明
 # ============================================================
+
 # DEEPSEEK_API_KEY — 通过 wrangler secret put 设置，勿写入此文件
 #   命令: wrangler secret put DEEPSEEK_API_KEY
 #
