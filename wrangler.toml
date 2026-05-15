@@ -14,4 +14,4 @@ compatibility_flags = ["nodejs_compat"]
 # CORS_ORIGIN — 允许的前端域名（部署 Pages 后替换）
 #   示例: https://cs-summary.pages.dev
 [vars]
-CORS_ORIGIN = "*"
+CORS_ORIGIN = "sumy.iieao.com"
