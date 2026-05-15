@@ -42,39 +42,6 @@
             '2xl': '1rem',
             '3xl': '1.25rem',
           },
-          keyframes: {
-            'fade-up': {
-              '0%': { opacity: '0', transform: 'translateY(16px)' },
-              '100%': { opacity: '1', transform: 'translateY(0)' },
-            },
-            'slide-in': {
-              '0%': { opacity: '0', transform: 'translateX(20px)' },
-              '100%': { opacity: '1', transform: 'translateX(0)' },
-            },
-            'scale-in': {
-              '0%': { opacity: '0', transform: 'scale(0.95)' },
-              '100%': { opacity: '1', transform: 'scale(1)' },
-            },
-            'toast-in': {
-              '0%': { opacity: '0', transform: 'translateY(12px) scale(0.96)' },
-              '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
-            },
-            'ring-fill': {
-              '0%': { strokeDashoffset: '175.93' },
-            },
-            'shimmer': {
-              '0%': { backgroundPosition: '-200% 0' },
-              '100%': { backgroundPosition: '200% 0' },
-            },
-          },
-          animation: {
-            'fade-up': 'fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-            'slide-in': 'slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-            'scale-in': 'scale-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-            'toast-in': 'toast-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-            'ring-fill': 'ring-fill 1s cubic-bezier(0.16, 1, 0.3, 1) forwards',
-            'shimmer': 'shimmer 2s infinite linear',
-          },
         },
       },
     }
@@ -172,7 +139,11 @@
       opacity: 1;
     }
 
-    /* === Toast === */
+    /* === Toast Animations === */
+    @keyframes toastInAnim {
+      0% { opacity: 0; transform: translateY(12px) scale(0.96); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
     .toast-container {
       position: fixed;
       bottom: 24px;
@@ -193,7 +164,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      animation: toast-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation: toastInAnim 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
     .toast-success .toast-icon { color: #34D399; }
     .toast-error .toast-icon { color: #FB7185; }
@@ -250,10 +221,14 @@
       border-radius: 2px;
     }
 
-    /* === Stagger children === */
+    /* === Stagger children (Fixed Keyframes) === */
+    @keyframes fadeUpAnim {
+      0% { opacity: 0; transform: translateY(16px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
     .stagger-children > * {
       opacity: 0;
-      animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation: fadeUpAnim 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
     .stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
     .stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
@@ -265,13 +240,6 @@
     .stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
     .stagger-children > *:nth-child(9) { animation-delay: 0.45s; }
     .stagger-children > *:nth-child(10) { animation-delay: 0.5s; }
-
-    /* === Shimmer loading === */
-    .shimmer-bg {
-      background: linear-gradient(90deg, #F4F6FB 25%, #E8ECF4 50%, #F4F6FB 75%);
-      background-size: 200% 100%;
-      animation: shimmer 2s infinite linear;
-    }
 
     /* === Conversation transcript === */
     .turn-user {
@@ -656,7 +624,7 @@ function resultCard(r, index) {
     <div class="result-card bg-white rounded-2xl border border-surface-200 shadow-card overflow-hidden">
       <div class="px-6 py-5 cursor-pointer flex items-start gap-5" onclick="toggleDetail(${index})">
         <div class="flex-shrink-0 hidden sm:block">
-          <svg width="64" height="64" viewBox="0 0 64 64">
+          <svg width="64" height="64" viewBox="0 64 64">
             <circle class="score-ring-track" cx="32" cy="32" r="28" stroke-width="4"/>
             <circle class="score-ring-fill" cx="32" cy="32" r="28" stroke-width="4"
               stroke="${scoreColor}"
